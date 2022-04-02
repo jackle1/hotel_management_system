@@ -29,9 +29,9 @@ public class DatabaseConnectionHandler {
 	private static final String ORACLE_URL = "jdbc:oracle:thin:@localhost:1522:stu";
 	private static final String EXCEPTION_TAG = "[EXCEPTION]";
 	private static final String WARNING_TAG = "[WARNING]";
-	
+
 	private Connection connection = null;
-	
+
 	public DatabaseConnectionHandler() {
 		try {
 			// Load the Oracle JDBC driver
@@ -41,7 +41,7 @@ public class DatabaseConnectionHandler {
 			System.out.println(EXCEPTION_TAG + " " + e.getMessage());
 		}
 	}
-	
+
 	public void close() {
 		try {
 			if (connection != null) {
@@ -51,16 +51,16 @@ public class DatabaseConnectionHandler {
 			System.out.println(EXCEPTION_TAG + " " + e.getMessage());
 		}
 	}
-	
+
 	public boolean login(String username, String password) {
 		try {
 			if (connection != null) {
 				connection.close();
 			}
-	
+
 			connection = DriverManager.getConnection(ORACLE_URL, username, password);
 			connection.setAutoCommit(false);
-	
+
 			System.out.println("\nConnected to Oracle!");
 			return true;
 		} catch (SQLException e) {
@@ -71,12 +71,12 @@ public class DatabaseConnectionHandler {
 
 	private void rollbackConnection() {
 		try  {
-			connection.rollback();	
+			connection.rollback();
 		} catch (SQLException e) {
 			System.out.println(EXCEPTION_TAG + " " + e.getMessage());
 		}
 	}
-	
+
 	public void databaseSetup() {
 //		dropBranchTableIfExists();
 //
@@ -94,19 +94,19 @@ public class DatabaseConnectionHandler {
 //		BranchModel branch2 = new BranchModel("123 Coco Ave", "Vancouver", 2, "Second Branch", 1234568);
 //		insertBranch(branch2);
 	}
-	
+
 	private void dropBranchTableIfExists() {
 		try {
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt.executeQuery("select table_name from user_tables");
-			
+
 			while(rs.next()) {
 				if(rs.getString(1).equalsIgnoreCase("branch")) {
 					//stmt.execute("DROP TABLE branch");
 					break;
 				}
 			}
-			
+
 			rs.close();
 			stmt.close();
 		} catch (SQLException e) {
@@ -130,7 +130,7 @@ public class DatabaseConnectionHandler {
 						rs.getString("address"),
 						rs.getDate("builtTime"),
 						rs.getFloat("rating")
-						);
+				);
 				result.add(model);
 			}
 			rs.close();
@@ -444,6 +444,58 @@ public class DatabaseConnectionHandler {
 		return customers;
 	}
 
+	public List<HotelBelongs> checkHotel(int hotelID) {
+		ArrayList<HotelBelongs> hotels = new ArrayList<>();
+		HotelBelongs hotel;
+		try {
+			Statement stmt = connection.createStatement();
+			PreparedStatement ps = connection.prepareStatement("SELECT * FROM HOTEL_BELONGS WHERE ID = ?");
+
+			ps.setInt(1, hotelID);
+			ResultSet rs = ps.executeQuery();
+
+			while(rs.next()) {
+				hotel = new HotelBelongs(rs.getInt("ID"),
+						rs.getString("hotelName"),
+						rs.getString("companyName"),
+						rs.getDouble("revenue"),
+						rs.getString("address"),
+						rs.getDate("builtTime"),
+						rs.getFloat("rating"));
+				hotels.add(hotel);
+			}
+
+			rs.close();
+			stmt.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return hotels;
+	}
+
+	public boolean addHotel(int hotelId, String hotelName, String companyName, double revenue, String address, String builtTime, double rating) {
+		boolean result = false;
+		try{
+			PreparedStatement ps = connection.prepareStatement("INSERT INTO HOTEL_BELONGS VALUES (?, ?, ?, ?, ?, ?, ?)");
+			ps.setInt(1, hotelId);
+			ps.setString(2, hotelName);
+			ps.setString(3, companyName);
+			ps.setDouble(4, revenue);
+			ps.setString(5, address);
+			ps.setDate(6, java.sql.Date.valueOf(builtTime));
+			ps.setDouble(7, rating);
+
+			ps.executeUpdate();
+			connection.commit();
+			ps.close();
+			result = true;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
 	public boolean addCustomer(String drivingLicense, String name) {
 		boolean result = false;
 		try {
@@ -461,8 +513,23 @@ public class DatabaseConnectionHandler {
 		return result;
 	}
 
-	public boolean assignMembership(int customerID, float discount, long credit) {
+	public boolean assignMembership(int membershipID, int customerID, String joinDate, float discount, long credit) {
 		boolean result = false;
+		try {
+			PreparedStatement ps = connection.prepareStatement("INSERT INTO MEMBERSHIP_APPLIES VALUES (?, ?, ?, ?, ?)");
+			ps.setInt(1, membershipID);
+			ps.setInt(2, customerID);
+			ps.setString(3, joinDate);
+			ps.setFloat(4, discount);
+			ps.setLong(5, credit);
+
+			ps.executeUpdate();
+			connection.commit();
+			ps.close();
+			result = true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 		return result;
 	}
 

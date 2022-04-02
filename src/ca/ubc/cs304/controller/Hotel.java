@@ -107,8 +107,8 @@ public class Hotel implements LoginWindowDelegate, TerminalTransactionsDelegate 
     }
 
     @Override
-    public boolean assignMembership(int customerID, float discount, long credit) {
-        return dbHandler.assignMembership(customerID, discount, credit);
+    public boolean assignMembership(int membershipID, int customerID, String joinDate, float discount, long credit) {
+        return dbHandler.assignMembership(membershipID, customerID, joinDate, discount, credit);
     }
 
     @Override
@@ -118,9 +118,7 @@ public class Hotel implements LoginWindowDelegate, TerminalTransactionsDelegate 
 
     @Override
     public boolean addCustomer(String drivingLicense, String name) {
-
         return dbHandler.addCustomer(drivingLicense, name);
-
     }
 
     @Override
@@ -136,8 +134,8 @@ public class Hotel implements LoginWindowDelegate, TerminalTransactionsDelegate 
 
 
     @Override
-    public boolean addHotel(int hotelID, HotelBelongs hotel) {
-        return false;
+    public boolean addHotel(int hotelId, String hotelName, String companyName, double revenue, String address, String builtTime, double rating) {
+        return dbHandler.addHotel(hotelId, hotelName, companyName, revenue, address, builtTime, rating);
     }
 
     @Override
@@ -152,8 +150,14 @@ public class Hotel implements LoginWindowDelegate, TerminalTransactionsDelegate 
 
 
     @Override
-    public HotelBelongs checkHotel(int hotelID) {
-        return null;
+    public List<HotelBelongs> checkHotel(int hotelID) {
+        List<HotelBelongs> hotels = dbHandler.checkHotel(hotelID);
+
+        for(HotelBelongs hotel : hotels) {
+            System.out.println("Hotel ID: " + hotel.getId() + "\n" + " Hotel Name: " + hotel.getHotelName() + "\n" + " Company Name: " + hotel.getCompanyName() + "\n" + " Revenue: " + hotel.getRevenue() + "\n" + " Address: " + hotel.getAddress() + "\n" + " Built Date: " + hotel.getBuiltTime() + "\n" + " Rating: " + hotel.getRating() + "\n");
+        }
+
+        return hotels;
     }
 
     @Override
